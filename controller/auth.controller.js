@@ -1,0 +1,249 @@
+import User from '../model/user.model.js'
+import { sendWelcomeEmail } from '../emailService/email.js'
+import generateTokenAndSetCookie from "../utils/generateToken.js"
+//import crypto from 'crypto'
+import axios from 'axios'
+import { OAuth2Client } from 'google-auth-library'
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+
+const APP_LINK = process.env.APP_LINK
+
+export const signup = async(req, res) =>{
+  
+  const { name, email, password } = req.body
+  
+  try {
+    
+    if(!name || !email || !password){
+
+    return res.status(400).json({ success: false, message: "All fields are required" })
+    }
+
+    if(password.length < 6){
+      return res.status(400).json({ success: false, message: "Password must be atleast 6 characters" })
+    }
+
+    const userExist = await User.findOne({email})
+    if(userExist){
+      return res.status(400).json({ success: false, message: "User already exist" })
+    }
+
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString()
+    
+    const user = new User({
+      name,
+      email,
+      password,
+      verificationToken,
+    })
+
+
+    await user.save()
+
+    //jwt authenticate user
+    //generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+    
+    await sendWelcomeEmail(user.email, user.name)
+    
+    
+    console.log("User created successfully")
+    
+    res.status(201).json({ 
+        success: true,
+        message: "User created successfully",
+       
+    })
+    
+  } catch (error) {
+    console.error("Error in signup contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+  
+  
+}
+
+
+export const login = async(req, res) =>{
+  
+  const { email, password } = req.body
+  
+  try {
+    const user = await User.findOne({ email })
+  
+    if(user && (await user.comparePassword(password))) {
+      
+      
+      generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+      
+
+    
+    
+      user.lastLogin = new Date()
+    
+      await user.save()
+        
+      console.log("User login successfully")
+    
+      res.status(200).json({ ...user._doc, password: undefined })
+
+    } else {
+      throw new Error("Incorrect email or password")
+    }
+  } catch (error) {
+    console.error("Error in login contoller", error.message);
+    res.status(400).json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const googleAuth = async (req, res) => {
+  
+  const { name, email, googleId } = req.body
+
+  //let user = null
+  
+  const user = await User.findOne({email})
+
+  
+  try {
+
+    if(!user){
+      user  = await User.create({
+        name,
+        email,
+        googleId
+
+      })
+
+      await user.save()
+    
+    } else if(!user.googleId){
+
+      user.googleId === googleId
+
+      
+    }
+
+    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+
+    
+    
+    user.lastLogin = new Date()
+    await user.save()
+    console.log("User login successfully")
+    res.status(200).json({ ...user._doc, password: undefined })
+
+  } catch (error) {
+    console.error("Error in googleAuth controller", error.message);
+    res.status(400).json({ 
+      success: false,
+      message: error.message
+    })
+    
+  }
+}
+
+
+export const facebookAuth = async (req, res) => {
+  
+  const { name, email, facebookId } = req.body
+
+  //let user = null
+  
+  const user = await User.findOne({email})
+
+  
+  try {
+
+    if(!user){
+      user  = await User.create({
+        name,
+        email,
+        facebookId
+
+      })
+
+      await user.save()
+    
+    } else if(!user.googleId){
+
+      user.facebookId === facebookId
+
+      
+    }
+
+    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+
+    
+    
+    user.lastLogin = new Date()
+    await user.save()
+    console.log("User login successfully")
+    res.status(200).json({ ...user._doc, password: undefined })
+
+  } catch (error) {
+    console.error("Error in facebookAuth controller", error.message);
+    res.status(400).json({ 
+      success: false,
+      message: error.message
+    })
+    
+  }
+}
+
+export const getUser = async(req, res) =>{
+  
+
+  
+  try {
+    const user = await User.findById(req.user._id).select("-password")
+
+    if(!user){
+      res.status(404).json({ success: false, message: "User not found"})
+    }
+
+    res.status(200).json(user)
+  } catch (error) {
+    console.error("Error in get user contoller", error.message);
+    res.status(500).json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const logoutUser = async (req, res) =>{
+
+  try {
+
+    const user = req.user
+
+    await User.findByIdAndUpdate(user._id, {
+      $inc: { tokenVersion: 1 }
+    })
+    res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+
+    })
+
+    console.log("toknver", user.tokenVersion)
+    console.log("User logout successfully")
+    
+    res.status(200).json({success: true, message: "User logout successfully"})
+  } catch (error) {
+    console.error("Error in logout contoller", error.message);
+    res.status(500).json({ 
+      success: false,
+      message: error.message
+    })
+  }
+  
+}
+
