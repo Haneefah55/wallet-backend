@@ -311,7 +311,8 @@ export const callback = async (req, res) => {
     await user.save()
       
     console.log("User login successfully")
-    console.log(user)
+    
+    //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
     let redirectUri = `${link}?user=${userString}&success=true`
@@ -320,7 +321,7 @@ export const callback = async (req, res) => {
     
     
   } catch (error) {
-    
+
     console.log(error)
     let redirectUri = `${link}?user=null&success=false`
     res.redirect(redirectUri)
