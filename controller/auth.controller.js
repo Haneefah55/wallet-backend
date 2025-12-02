@@ -318,7 +318,22 @@ export const callback = async (req, res) => {
     const userString = encodeURIComponent(JSON.stringify(user))
     const redirect_uri = `${link}//index?user=${userString}&success=false`
     
-    res.redirect(redirect_uri)
+    res.send(`
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>redirecting...</title>
+
+          <script>
+            window.location.href='exp://10.33.63.215:8081/index?user=${userString}'
+          </script>
+        </head>
+        <body>
+              <h3>redirecting...</h3>
+        </body>
+      </html>`
+    )
    
     
     
@@ -327,6 +342,21 @@ export const callback = async (req, res) => {
     console.log(error)
   
     const redirect_uri = `${link}//index?user=null&success=false`
-    res.redirect(redirect_uri)
+    res.send(`
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>redirecting...</title>
+
+          <script>
+            window.location.href='exp://10.33.63.215:8081/index?user=null'
+          </script>
+        </head>
+        <body>
+              <h3>redirecting...</h3>
+        </body>
+      </html>`
+    )
   }
 }
