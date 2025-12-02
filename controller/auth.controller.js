@@ -297,6 +297,8 @@ export const callback = async (req, res) => {
 
       })
 
+      await sendWelcomeEmail(user.email, user.name)
+
       
     } 
 
