@@ -247,3 +247,79 @@ export const logoutUser = async (req, res) =>{
   
 }
 
+
+export const authGoogle = async (req, res) => {
+  
+  const authUri = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent('profile email')}`
+
+  res.redirect(authUri)
+}
+
+
+export const callback = async (req, res) => {
+
+  const { code } = req.query
+  
+  try {
+
+    const googleRes = await axios.post("https://oauth2.googleapis.com/token", {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code,
+      redirect_uri: process.env.REDIRECT_URI,
+      grant_type: 'authorization_code'
+    })
+    console.log("callback successful")
+    console.log("googleRes.data", googleRes.data)
+
+    const { id_token, access_token } = googleRes.data
+
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+
+    const payload = ticket.getPayload()
+    console.log("payload", payload)
+
+    const { email, name, sub: googleId } = payload
+
+    // check if user is already created
+
+    let user = await User.findOne({ email })
+
+    if (!user) {
+      user = await User.create({
+        email,
+        name,
+        googleId,
+        
+
+      })
+
+      
+    } 
+
+    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+
+      
+    user.isVerified = true,
+    user.lastLogin =  new Date()
+  
+    await user.save()
+      
+    console.log("User login successfully")
+    console.log(user)
+
+    const userString = encodeURIComponent(JSON.stringify(user))
+    let redirectUri = `${APP_LINK}?user=${userString}&success=true`
+    res.redirect(redirectUri)
+   
+    
+    
+  } catch (error) {
+    console.log(error)
+    let redirectUri = `${APP_LINK}?user=null&success=false`
+    res.redirect(redirectUri)
+  }
+}
