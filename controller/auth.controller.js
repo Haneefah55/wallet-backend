@@ -7,7 +7,7 @@ import { OAuth2Client } from 'google-auth-library'
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-const APP_LINK = process.env.APP_LINK
+const link = process.env.NODE_ENV === "development" ? process.env.EXPO_LINK : process.env.APP_LINK
 
 export const signup = async(req, res) =>{
   
@@ -314,14 +314,15 @@ export const callback = async (req, res) => {
     console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    let redirectUri = `${APP_LINK}?user=${userString}&success=true`
+    let redirectUri = `${link}?user=${userString}&success=true`
     res.redirect(redirectUri)
    
     
     
   } catch (error) {
+    
     console.log(error)
-    let redirectUri = `${APP_LINK}?user=null&success=false`
+    let redirectUri = `${link}?user=null&success=false`
     res.redirect(redirectUri)
   }
 }
