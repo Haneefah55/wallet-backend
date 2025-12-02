@@ -25,8 +25,8 @@ app.use("/api/auth", authRoutes)
 app.use("/api/transaction", transactionRoutes)
 app.use("/api/budget", budgetRoutes)
 
-app.get('/', (req, res) =>{
-  res.send("backend working")
+app.get('/api', (req, res) =>{
+  res.status(200).json({ message: "backend api connected" })
 })
 
 
