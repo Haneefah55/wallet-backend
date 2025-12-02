@@ -280,7 +280,8 @@ export const callback = async (req, res) => {
     })
 
     const payload = ticket.getPayload()
-    console.log("payload", payload)
+
+    //console.log("payload", payload)
 
     const { email, name, sub: googleId } = payload
 
@@ -311,19 +312,39 @@ export const callback = async (req, res) => {
     await user.save()
       
     console.log("User login successfully")
-    
+
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    let redirectUri = `${link}?user=${userString}&success=true`
-    res.redirect(redirectUri)
+    
+    res.send(`
+      <html>
+        <body>
+        <script>
+          window.location.href = "wallet://home?user=${userString}&success=true"
+        </script>
+        
+        </body>
+      
+      </html>
+    `)
    
     
     
   } catch (error) {
 
     console.log(error)
-    let redirectUri = `${link}?user=null&success=false`
-    res.redirect(redirectUri)
+  
+    res.send(`
+      <html>
+        <body>
+        <script>
+          window.location.href = "wallet://home?user=null&success=false"
+        </script>
+        
+        </body>
+      
+      </html>
+    `)
   }
 }
