@@ -270,7 +270,7 @@ export const callback = async (req, res) => {
       grant_type: 'authorization_code'
     })
     console.log("callback successful")
-    console.log("googleRes.data", googleRes.data)
+    //console.log("googleRes.data", googleRes.data)
 
     const { id_token, access_token } = googleRes.data
 
@@ -316,24 +316,9 @@ export const callback = async (req, res) => {
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    const redirect_uri = `${link}//index?user=${userString}&success=false`
+    const redirect_uri = `exp://10.33.63.215:8081?user=${userString}`
     
-    res.send(`
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>redirecting...</title>
-
-          <script>
-            window.location.href='exp://10.33.63.215:8081/index?user=${userString}'
-          </script>
-        </head>
-        <body>
-              <h3>redirecting...</h3>
-        </body>
-      </html>`
-    )
+    res.redirect(redirect_uri)
    
     
     
@@ -341,8 +326,9 @@ export const callback = async (req, res) => {
 
     console.log(error)
   
-    const redirect_uri = `${link}//index?user=null&success=false`
-    res.send(`
+    const redirect_uri = `exp://10.33.63.215:8081?user=null`
+    res.redirect(redirect_uri)
+    /* res.send(`
       <html lang="en">
         <head>
           <meta charset="UTF-8">
@@ -350,13 +336,13 @@ export const callback = async (req, res) => {
           <title>redirecting...</title>
 
           <script>
-            window.location.href='exp://10.33.63.215:8081/index?user=null'
+            window.location.href='exp://10.33.63.215:8081?user=null'
           </script>
         </head>
         <body>
               <h3>redirecting...</h3>
         </body>
       </html>`
-    )
+    ) */
   }
 }
