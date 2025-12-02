@@ -316,18 +316,9 @@ export const callback = async (req, res) => {
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
+    const redirect_uri = `${link}//index?user=${userString}&success=false`
     
-    res.send(`
-      <html>
-        <body>
-        <script>
-          window.location.href = "wallet://home?user=${userString}&success=true"
-        </script>
-        
-        </body>
-      
-      </html>
-    `)
+    res.redirect(redirect_uri)
    
     
     
@@ -335,16 +326,7 @@ export const callback = async (req, res) => {
 
     console.log(error)
   
-    res.send(`
-      <html>
-        <body>
-        <script>
-          window.location.href = "wallet://home?user=null&success=false"
-        </script>
-        
-        </body>
-      
-      </html>
-    `)
+    const redirect_uri = `${link}//index?user=null&success=false`
+    res.redirect(redirect_uri)
   }
 }
