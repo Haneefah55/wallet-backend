@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { signup, login, getUser, logoutUser, authGoogle, callback } from '../controller/auth.controller.js'
+import { signup, login, getUser, logoutUser, authGoogle, callback, verifyToken } from '../controller/auth.controller.js'
 
 import { protectRoute } from '../middleware/auth.middleware.js'
 
@@ -11,6 +11,7 @@ router.get('/', protectRoute, getUser)
 router.post('/signup', signup)
 router.post('/login', login)
 router.post('/logout', protectRoute, logoutUser)
+router.post('/verify-token', verifyToken)
 
 
 router.get('/google', authGoogle)

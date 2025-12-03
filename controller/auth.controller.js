@@ -1,13 +1,13 @@
 import User from '../model/user.model.js'
 import { sendWelcomeEmail } from '../emailService/email.js'
-import generateTokenAndSetCookie from "../utils/generateToken.js"
+import { generateToken, generateTokenAndSetCookie } from "../utils/generateToken.js"
 //import crypto from 'crypto'
 import axios from 'axios'
 import { OAuth2Client } from 'google-auth-library'
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-const link = process.env.NODE_ENV === "development" ? process.env.EXPO_LINK : process.env.APP_LINK
+//const link = process.env.NODE_ENV === "development" ? process.env.EXPO_LINK : process.env.APP_LINK
 
 export const signup = async(req, res) =>{
   
@@ -303,20 +303,22 @@ export const callback = async (req, res) => {
       
     } 
 
-    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
+   
 
       
-    user.isVerified = true,
+    user.isVerified = true
     user.lastLogin =  new Date()
   
     await user.save()
+
+    const token = generateToken(user._id, user.tokenVersion)
       
     console.log("User login successfully")
 
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    const redirect_uri = `exp://10.33.63.215:8081/--/(auth)/callback?user=${userString}` 
+    const redirect_uri = `exp://10.33.63.215:8081/--/(auth)/callback?token=${token}` 
     
     res.redirect(redirect_uri)
    
@@ -330,4 +332,42 @@ export const callback = async (req, res) => {
     res.redirect(redirect_uri)
      
   }
+}
+
+
+export const verifyToken = async (req, res) => {
+
+  const token = req.body
+
+  if(!token){
+    return res.status(400).json({ error: "no token provided" })
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET)
+    const user = await User.findById(decoded.userId).select("-password")
+
+    if(user.tokenVersion !== decoded.tokenVersion) {
+      
+      return res.status(401).json({ message: "Unauthorized" })
+    }
+
+    res.cookie("token", assessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+
+    
+    res.json(user)
+
+  } catch (error) {
+    console.error("Error in verify token contoller", error.message);
+    res.status(400).json({ 
+      success: false,
+      message: error.message
+    })
+  }
+  
 }
