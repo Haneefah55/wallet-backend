@@ -340,6 +340,8 @@ export const verifyToken = async (req, res) => {
 
   const token = req.body
 
+  console.log("token", token)
+
   if(!token){
     return res.status(400).json({ error: "no token provided" })
   }
