@@ -338,7 +338,7 @@ export const callback = async (req, res) => {
 
 export const verifyToken = async (req, res) => {
 
-  const token = req.body
+  const { token } = req.body
 
   console.log("token", token)
 
