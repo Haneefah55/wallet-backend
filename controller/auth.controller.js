@@ -1,4 +1,5 @@
 import User from '../model/user.model.js'
+import jwt from 'jsonwebtoken'
 import { sendWelcomeEmail } from '../emailService/email.js'
 import { generateToken, generateTokenAndSetCookie } from "../utils/generateToken.js"
 //import crypto from 'crypto'
