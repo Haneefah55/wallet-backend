@@ -316,7 +316,7 @@ export const callback = async (req, res) => {
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    const redirect_uri = `exp://10.33.63.215:8081?user=${userString}`
+    const redirect_uri = process.env.NODE_ENV === "development" ? `exp://10.33.63.215:8081/--/(auth)/callback?user=${userString}` : `wallet://(auth)/callback?user=${userString}`
     
     res.redirect(redirect_uri)
    
@@ -326,23 +326,8 @@ export const callback = async (req, res) => {
 
     console.log(error)
   
-    const redirect_uri = `exp://10.33.63.215:8081?user=null`
+    const redirect_uri = process.env.NODE_ENV === "development" ? `exp://10.33.63.215:8081/--/(auth)/login` : `wallet://(auth)/login`
     res.redirect(redirect_uri)
-    /* res.send(`
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>redirecting...</title>
-
-          <script>
-            window.location.href='exp://10.33.63.215:8081?user=null'
-          </script>
-        </head>
-        <body>
-              <h3>redirecting...</h3>
-        </body>
-      </html>`
-    ) */
+     
   }
 }
