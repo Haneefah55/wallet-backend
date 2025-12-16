@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { protectRoute } from '../middleware/auth.middleware.js'
-import { getTransactions, addTransactions, getMonthlySummary, weeklyExpense, getOverview, MonthlyCategoryOverview, getCategory, deleteTransaction, editTransaction } from '../controller/transaction.controller.js'
+import { getTransactions, addTransactions, getMonthlySummary, weeklyExpense, getOverview, MonthlyCategoryOverview, getCategory, deleteTransaction, editTransaction, getATransaction } from '../controller/transaction.controller.js'
 
 const router = express.Router()
 
@@ -20,14 +20,14 @@ router.post('/category', protectRoute, getCategory)
 router.post('/', protectRoute, addTransactions)
 
 
-router.patch('/', protectRoute, editTransaction)
+router.patch('/:id', protectRoute, editTransaction)
 
 
 router.delete('/:id', protectRoute, deleteTransaction)
 
 
 
-
+router.get('/:id', protectRoute, getATransaction)
 
 
 export default router

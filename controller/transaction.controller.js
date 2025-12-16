@@ -63,6 +63,28 @@ function getSixMonth(start) {
   return months
 }
 
+export const getATransaction = async(req, res) =>{
+
+  try {
+    const { id } = req.params
+    const user = req.user
+    const transaction = await Transaction.findOne({ user: user._id, _id: id })
+
+    if(!transaction){
+      res.status(404).json({ success: false, message: "Transactions not found"})
+    }
+
+    
+    res.status(200).json(transaction)
+  } catch (error) {
+    console.error("Error in getTransactions contoller", error.message);
+    res.status(400).json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
 
 export const getTransactions = async(req, res) =>{
 
@@ -129,7 +151,7 @@ export const editTransaction = async (req, res) => {
   try {
     const { id } = req.params
     const user = req.user
-    const { type, title, amount, category, date } = req.body
+    const { title, amount, category, date } = req.body
 
     const transaction = await Transaction.findOne({ user: user._id, _id: id })
 
@@ -138,7 +160,7 @@ export const editTransaction = async (req, res) => {
       return res.status(404).json({ message: "Transaction not found" })
     }
 
-    transaction.type = type
+  
     transaction.title = title
     transaction.amount = amount
     transaction.category = category

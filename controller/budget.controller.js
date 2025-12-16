@@ -225,7 +225,9 @@ export const getMonthlyOverall = async (req, res) => {
 
     const totalBudget = budget.length > 0 ? budget[0].totalBudget : 0
     const totalSpent = spendings.length > 0 ? spendings[0].totalSpent : 0
-    
+    /* console.log("totalSpent", totalSpent)
+    console.log("spendingsCategory", spendingsCategory)
+    console.log("budgetCategory", budgetCategory) */
 
     const totalRemaining = totalBudget - totalSpent
     const percentSpent = 100 * (totalSpent / totalBudget)
@@ -234,14 +236,17 @@ export const getMonthlyOverall = async (req, res) => {
 
       const spendings = spendingsCategory.find((item) => item._id === cat._id) 
 
+      //console.log("spendings", spendings)
+      const totalSpent = spendings?.totalSpent || 0
+
 
       return{
 
-        totalSpent: spendings.totalSpent,
-        category: spendings._id,
+        totalSpent,
+        category: cat._id,
         totalBudget: cat.totalBudget,
-        remaining: cat.totalBudget - spendings.totalSpent,
-        percent: 100 * (spendings.totalSpent / cat.totalBudget)
+        remaining: cat.totalBudget - totalSpent,
+        percent: 100 * (totalSpent / cat.totalBudget)
 
       }
     
