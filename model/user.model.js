@@ -14,6 +14,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
+  pendingEmail: {
+    type: String,
+    unique: true,
+    trim: true,
+    lowercase: true,
+  },
   password: {
     type: String,
     minlength: 6,

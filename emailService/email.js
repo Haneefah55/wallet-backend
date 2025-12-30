@@ -1,5 +1,5 @@
-import {  WELCOME_EMAIL_TEMP } from "./emailTemplate.js"
-import { transporter, sender } from "./emailConfig.js"
+import {  WELCOME_EMAIL_TEMP, EMAIL_CHANGE_TEMP } from "./emailTemplate.js"
+import { sendEmail } from "./emailConfig.js"
 
 /** 
 export const sendVerificationEmail= async (email, verificationToken) =>{
@@ -27,28 +27,57 @@ export const sendVerificationEmail= async (email, verificationToken) =>{
 
 **/
 
+
+export const sendEmailChangedConfirmation = async(email, name, newEmail, date) =>{
+
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  
+  const subject = "Email Change Confirmation"
+  const html = EMAIL_CHANGE_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear).replaceAll("{date}", date ).replaceAll("{newEmail}", newEmail).replaceAll("{email}", email).replaceAll("{date}", date ).replaceAll("{newEmail}", newEmail).replaceAll("{year}", currentYear)
+  
+
+  await sendEmail(email, subject, html)
+  
+
+ 
+
+}
+
+
+export const sendEmailChangeVerification = async(email, name, code, newEmail) =>{
+
+  const date = new Date()
+  const currentYear = date.getFullYear()
+
+
+  const subject= "Verify your new email address"
+  const html= EMAIL_CHANGE_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear).replaceAll("{code}", code ).replaceAll("{newEmail}", newEmail).replaceAll("{email}", email)
+  
+
+
+
+  await sendEmail(email, subject, html)
+  
+}
+
 export const sendWelcomeEmail = async (email, name) =>{
 
   //to get current year
   const date = new Date()
   const currentYear = date.getFullYear()
   
-  const welcomeEmail = {
-  from: sender,
-  to: email,
-  subject: "Welcome to Wallet! Lets Master Your Money",
-  html: WELCOME_EMAIL_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear),
-  };
+  const subject = "Welcome to Wallet! Lets Master Your Money"
+  const html= WELCOME_EMAIL_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear)
 
-  transporter.sendMail(welcomeEmail, function(error, info){
-    if (error) {
-      console.log("Error sending email", error);
-    } else {
-      console.log('Email sent: ',  info.response);
-    }
-  });
+  await sendEmail(email, subject, html)
+
   
 }
+
+
+
+
 
 /** 
 export const sendPasswordResetEmail = async (email, resetUrl) =>{

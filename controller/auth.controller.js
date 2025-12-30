@@ -1,10 +1,12 @@
 import User from '../model/user.model.js'
 import jwt from 'jsonwebtoken'
-import { sendWelcomeEmail } from '../emailService/email.js'
+import { sendWelcomeEmail, sendEmailChangeVerification, sendEmailChangedConfirmation } from '../emailService/email.js'
 import { generateToken, generateTokenAndSetCookie } from "../utils/generateToken.js"
 //import crypto from 'crypto'
 import axios from 'axios'
 import { OAuth2Client } from 'google-auth-library'
+import bcrypt from 'bcryptjs'
+import cloudinary from '../utils/cloudinary.js'
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
@@ -67,7 +69,6 @@ export const signup = async(req, res) =>{
   
 }
 
-
 export const login = async(req, res) =>{
   
   const { email, password } = req.body
@@ -103,100 +104,6 @@ export const login = async(req, res) =>{
   }
 }
 
-export const googleAuth = async (req, res) => {
-  
-  const { name, email, googleId } = req.body
-
-  //let user = null
-  
-  const user = await User.findOne({email})
-
-  
-  try {
-
-    if(!user){
-      user  = await User.create({
-        name,
-        email,
-        googleId
-
-      })
-
-      await user.save()
-    
-    } else if(!user.googleId){
-
-      user.googleId === googleId
-
-      
-    }
-
-    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
-
-    
-    
-    user.lastLogin = new Date()
-    await user.save()
-    console.log("User login successfully")
-    res.status(200).json({ ...user._doc, password: undefined })
-
-  } catch (error) {
-    console.error("Error in googleAuth controller", error.message);
-    res.status(400).json({ 
-      success: false,
-      message: error.message
-    })
-    
-  }
-}
-
-
-export const facebookAuth = async (req, res) => {
-  
-  const { name, email, facebookId } = req.body
-
-  //let user = null
-  
-  const user = await User.findOne({email})
-
-  
-  try {
-
-    if(!user){
-      user  = await User.create({
-        name,
-        email,
-        facebookId
-
-      })
-
-      await user.save()
-    
-    } else if(!user.googleId){
-
-      user.facebookId === facebookId
-
-      
-    }
-
-    generateTokenAndSetCookie(res, user._id, user.tokenVersion)
-
-    
-    
-    user.lastLogin = new Date()
-    await user.save()
-    console.log("User login successfully")
-    res.status(200).json({ ...user._doc, password: undefined })
-
-  } catch (error) {
-    console.error("Error in facebookAuth controller", error.message);
-    res.status(400).json({ 
-      success: false,
-      message: error.message
-    })
-    
-  }
-}
 
 export const getUser = async(req, res) =>{
   
@@ -373,4 +280,197 @@ export const verifyToken = async (req, res) => {
     })
   }
   
+}
+
+export const changeEmail = async(req, res) =>{
+  try {
+
+  
+    const { newEmail, password } = req.body
+
+    const user = await User.findById(req.user._id)
+
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+
+    if(!isPasswordValid){
+      return res.status(400).json({ success: false, message: "Invalid password" })
+    }
+
+    
+    const emailExist = await User.findOne({
+      $or: [{ email: newEmail }, { pendingEmail: newEmail }],
+    })
+
+    if(emailExist){
+      return res.status(400).json({ success: false, message: "Email already exist" })
+    }
+
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString()
+
+    user.pendingEmail = newEmail
+    user.verificationToken = await bcrypt.hash(verificationToken, 10)
+    user.verificationTokenExpiresAt = Date.now() + 15  * 60 * 1000  //15 mins
+
+    await user.save()
+
+    const code = verificationToken
+
+    
+    
+    await sendEmailChangeVerification(user.email, user.name, code, newEmail)
+
+    res.json({ message: "Email change verificatin sent"})
+
+  } catch (error) {
+    console.error("Error in change email contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const verifyNewEmail = async(req, res) =>{
+  try {
+    const { code } = req.body
+
+    const user = await User.findById(req.user._id)
+    
+
+    if (!user.pendingEmail || !user.verificationToken){
+      return res.status(400).json({ success: false, message: "No pending email change" })
+    }
+
+    if(Date.now() > user.verificationTokenExpiresAt){
+      return res.status(400).json({ success: false, message: "OTP code expired" })
+    }
+
+    const validCode = await bcrypt.compare(code, user.verificationToken)
+
+    if(!validCode){
+      return res.status(400).json({ success: false, message: "Invalid OTP code" })
+    }
+
+
+    const oldEmail = user.email
+
+    const newEmail = user.pendingEmail
+
+
+    user.email = user.pendingEmail
+    user.pendingEmail = null
+    user.verificationToken = null
+    user.verificationTokenExpiresAt = null
+    user.isVerified = true
+
+    user.tokenVersion += 1
+
+    await user.save()
+
+    const date = new Date()
+
+
+    //send email update message
+
+    await sendEmailChangedConfirmation(oldEmail, user.name, newEmail, date)
+
+    res.json({ message: "Email updated successfully"})
+  } catch (error) {
+    console.error("Error in  email change confirm contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const deleteAccount = async(req, res) =>{
+  try {
+
+    const user = req.user
+    if(user.image){
+      const publicId = product.image.split("/").pop().split(".")[0]
+      
+      try {
+        await cloudinary.uploader.destroy(`products/${publicId}`)
+        console.log("user image deleted from cloudinary")
+      } catch (error) {
+        console.error("error deleting user image from cloudinary", error);
+      }
+    }
+
+    await User.findOneAndDelete(req.user._id)
+
+
+    console.log("user deleted")
+    res.json({ message: " user deleted successfully"})
+  } catch (error) {
+    console.error("Error in  deleteAccount contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const changeName = async(req, res) =>{
+  try {
+    
+    const { name } = req.body
+    const user = await User.findById(req.user._id).select("-password")
+    if(!user){
+      res.status(404).json({ success: false, message: "User not found"})
+    }
+
+    user.name = name
+
+    await user.save()
+
+    res.json(user)
+
+
+  } catch (error) {
+    console.error("Error in  changeName contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const changePassword = async(req, res) =>{
+
+  try {
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user._id)
+
+    if(!user){
+      res.status(404).json({ success: false, message: "User not found"})
+    }
+
+    const isPasswordcorrect = await bcrypt.compare(oldPassword, user.password)
+
+    if(!isPasswordcorrect){
+      return res.status(400).json({ success: false, message: "Incorrect old password" })
+    }
+
+    user.password = newPassword
+
+    user.tokenVersion += 1
+
+    await user.save()
+
+    res.json({ message: "password changed successfully"})
+
+
+
+  } catch (error) {
+    console.error("Error in  chnagepassword contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+
 }

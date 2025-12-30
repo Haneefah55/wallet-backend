@@ -53,3 +53,133 @@ export const WELCOME_EMAIL_TEMP = `
   </body>
 </html>
 `
+
+export const EMAIL_CHANGE_TEMP =`
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="view-port" content="width=device-width, initial-scale = 1.0"> 
+   <title>Email Change Verification</title> 
+  </head>
+  <body style = "font-family: Poppins, sans-serif; margin: 0, auto; max-width: 600px; padding: 20px; color: #383838;">
+    <div style="text-align: center; padding: 20px;">
+      <h1 style="color: #a51616; margin: auto; font-size: 25px;">Wallet</h1>
+    </div>
+    <div style="background-color: #ecd3d3; padding: 20px; border-radius: 0 5px 5px 0; box-shadow:  0 2px 5px rgba(0,0,0,0.1);">
+      <h3>Hi, {name}</h3>
+      <p>We received a request to change the email address associated with your  <strong>Wallet</strong> account.</p>
+
+      <p>Old email <strong style="color: #a51616;">{email}</strong></p>
+      <p>New email <strong style="color: #a51616;">{newEmail}</strong></p>
+
+
+      <p style="text-align: center;">Your verification code is <br /><strong style="color: #4b4a4a; font-size: larger;">{code}</strong></p>
+
+      <h4>Important Notice:</h4>
+
+      <ul>
+        <li>If you didn't request foe the email change, please ignore this message and contact our support team immediately</li>
+        <li>Your email address will not be changed until you verify the new email address</li>
+        <li>For security purposes, the verification code will expire in 10 minutes</li>
+       
+      </ul>
+
+      <h4>Need help?</h4>
+
+      <p>Contact our support team at <b>support@wallet.com</b>, or call our help center +23 586 3475 88393</p>
+
+      
+
+      <h3>Security Tips:</h3>
+
+      <ul>
+        <li>Never share your verification code with anyone</li>
+        <li>Our team will never ask for your password or code</li>
+        
+       
+      </ul>
+
+      <h3>Thanks,<br />The Wallet Team</h3>
+
+
+      <p><i>This is an automated message.Please do not reply directly to this email</i></p>
+
+      
+    
+        
+
+      
+      <div style="color: #a51616; margin-top: 2rem; text-align: center; font-size: 15px;">
+        <p><a href="#">Unsubscribe</a></p>
+        <p>© {year} Wallet, Inc All right reserved.</p>
+      </div>
+      
+    </div>
+  </body>
+</html>
+
+`
+
+export const EMAIL_CHANGE_CONFRM = `
+
+
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="view-port" content="width=device-width, initial-scale = 1.0"> 
+   <title>Email Update Confirmation</title> 
+  </head>
+  <body style = "font-family: Poppins, sans-serif; margin: 0, auto; max-width: 600px; padding: 20px; color: #383838;">
+    <div style="text-align: center; padding: 20px;">
+      <h1 style="color: #a51616; margin: auto; font-size: 25px;">Wallet</h1>
+    </div>
+    <div style="background-color: #ecd3d3; padding: 20px; border-radius: 0 5px 5px 0; box-shadow:  0 2px 5px rgba(0,0,0,0.1);">
+      <h3>Hi, {name}</h3>
+      <p>We are writing to confirm that the email address for your <strong>Wallet</strong> account has been successfullu updated.</p>
+
+      <p>Old email <strong style="color: #a51616;">{email}</strong></p>
+      <p>New email <strong style="color: #a51616;">{newEmail}</strong></p>
+      <p>Date changed <strong style="color: #a51616;">{date}</strong></p>
+
+
+      
+
+      <h4>What this means:</h4>
+
+      <ul>
+        <li>You will use your new email to log in to your account</li>
+        <li>All future account notififcations will be sent to your new email address</li>
+        <li>Your account settings and data remain unchanged</li>
+       
+      </ul>
+
+      <h4>Need help?</h4>
+
+      <p>Contact our support team at <b>support@wallet.com</b>, or call our help center +23 586 3475 88393</p>
+
+      
+
+      <h3>Thanks,<br />The Wallet Team</h3>
+
+
+      <p><i>This is an automated message.Please do not reply directly to this email</i></p>
+
+      
+    
+        
+
+      
+      <div style="color: #a51616; margin-top: 2rem; text-align: center; font-size: 15px;">
+        <p><a href="#">Unsubscribe</a></p>
+        <p>© {year} Wallet, Inc All right reserved.</p>
+      </div>
+      
+    </div>
+  </body>
+</html>
+`
