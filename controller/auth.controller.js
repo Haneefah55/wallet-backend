@@ -1,6 +1,6 @@
 import User from '../model/user.model.js'
 import jwt from 'jsonwebtoken'
-import { sendWelcomeEmail, sendEmailChangeVerification, sendEmailChangedConfirmation } from '../emailService/email.js'
+import { sendWelcomeEmail, sendEmailChangeVerification, sendEmailChangedConfirmation, sendVerificationEmail, sendAccountVerifiedEmail } from '../emailService/email.js'
 import { generateToken, generateTokenAndSetCookie } from "../utils/generateToken.js"
 //import crypto from 'crypto'
 import axios from 'axios'
@@ -317,7 +317,13 @@ export const changeEmail = async(req, res) =>{
 
     
     
-    await sendEmailChangeVerification(user.email, user.name, code, newEmail)
+    
+
+     try {
+      await sendEmailChangeVerification(user.email, user.name, code, newEmail)
+    } catch (error) {
+      res.status(500).json({ message: error.message || "error sending verification email"})
+    }
 
     res.json({ message: "Email change verificatin sent"})
 
@@ -357,7 +363,7 @@ export const verifyNewEmail = async(req, res) =>{
     const newEmail = user.pendingEmail
 
 
-    user.email = user.pendingEmail
+    user.email = newEmail
     user.pendingEmail = null
     user.verificationToken = null
     user.verificationTokenExpiresAt = null
@@ -392,7 +398,7 @@ export const deleteAccount = async(req, res) =>{
       const publicId = product.image.split("/").pop().split(".")[0]
       
       try {
-        await cloudinary.uploader.destroy(`products/${publicId}`)
+        await cloudinary.uploader.destroy(`wallet/${publicId}`)
         console.log("user image deleted from cloudinary")
       } catch (error) {
         console.error("error deleting user image from cloudinary", error);
@@ -473,4 +479,168 @@ export const changePassword = async(req, res) =>{
     })
   }
 
+}
+
+export const changePic = async(req, res) =>{
+  try {
+    const { data } = req.body
+
+    const user = await User.findById(req.user._id).select("-password")
+
+    let cloudinaryResponse = null
+
+    if(data){
+
+      if(user.image){
+        const publicId = user.image.split("/").pop().split(".")[0]
+        
+        try {
+          await cloudinary.uploader.destroy(`wallet/${publicId}`)
+          console.log("product previous image deleted from cloudinary")
+        } catch (error) {
+          console.error("error deleting previous image from cloudinary", error);
+        }
+      }
+
+      cloudinaryResponse = await cloudinary.uploader.upload(data, { folder: "wallet" })
+
+    }
+
+    user.image = cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : ""
+
+    await user.save()
+
+    res.json(user)
+
+
+  } catch (error) {
+    console.error("Error in  changepic contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+
+
+export const verifyAccount = async(req, res) =>{
+
+
+  try {
+
+    const user = await User.findById(req.user._id)
+
+    if(!user){
+      res.status(404).json({ success: false, message: "User not found"})
+    }
+
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString()
+
+    console.log(verificationToken)
+
+    
+    user.verificationToken = await bcrypt.hash(verificationToken, 10)
+    user.verificationTokenExpiresAt = Date.now() + 15  * 60 * 1000  //15 mins
+    
+    await user.save()
+
+    const code = verificationToken
+
+    
+    /* try {
+      await sendVerificationEmail(user.email, user.name, code)
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message || "error sending verification email"})
+    } */
+    
+    await sendVerificationEmail(user.email, user.name, code)
+
+    res.status(200).json({ success: true, message: "verification email sent"})
+
+    
+  } catch (error) {
+    console.error("Error in  verifyAccount contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+    
+  }
+}
+
+export const verifyCode = async(req, res) =>{
+  try {
+   const { code } = req.body
+
+   const user = await User.findById(req.user._id)
+
+   if(Date.now() > user.verificationTokenExpiresAt){
+      return res.status(400).json({ success: false, message: "OTP code expired" })
+    }
+
+    const validCode = await bcrypt.compare(code, user.verificationToken)
+
+    if(!validCode){
+      return res.status(400).json({ success: false, message: "Invalid OTP code" })
+    }
+
+    user.verificationToken = null
+    user.verificationTokenExpiresAt = null
+    user.isVerified = true
+
+    user.tokenVersion += 1
+
+    await user.save()
+
+    await sendAccountVerifiedEmail(user.name, user.email)
+
+    res.json(user)
+
+    
+
+  } catch (error) {
+    console.error("Error in  verifycode contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+export const resendCode = async(req, res) =>{
+
+
+  try {
+    const user = await User.findById(req.user._id)
+
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString()
+
+    console.log(newCode)
+
+    
+    user.verificationToken = await bcrypt.hash(newCode, 10)
+    user.verificationTokenExpiresAt = Date.now() + 15  * 60 * 1000  //15 mins
+    
+    await user.save()
+
+    const code = newCode
+
+    /* try {
+      await sendVerificationEmail(user.email, user.name, code)
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message || "error sending verification email"})
+    } */
+    
+    await sendVerificationEmail(user.email, user.name, code)
+
+    res.status(200).json({ success: true, message: "verification email resent"})
+    
+  } catch (error) {
+    console.error("Error in  resend code contoller", error.message);
+    res.json({ 
+      success: false,
+      message: error.message
+    })
+  }
 }

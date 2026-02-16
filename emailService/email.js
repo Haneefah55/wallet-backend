@@ -1,4 +1,4 @@
-import {  WELCOME_EMAIL_TEMP, EMAIL_CHANGE_TEMP } from "./emailTemplate.js"
+import {  WELCOME_EMAIL_TEMP, EMAIL_CHANGE_TEMP, VERIFY_ACCOUNT_TEMP, ACCT_VERIFIED_TEMP } from "./emailTemplate.js"
 import { sendEmail } from "./emailConfig.js"
 
 /** 
@@ -44,6 +44,16 @@ export const sendEmailChangedConfirmation = async(email, name, newEmail, date) =
 
 }
 
+export const sendVerificationEmail = async(email, name, code) =>{
+  const date = new Date()
+  const currentYear = date.getFullYear()
+
+  const subject= "Verify your account"
+  const html= VERIFY_ACCOUNT_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear).replaceAll("{code}", code)
+
+  await sendEmail(email, subject, html)
+}
+
 
 export const sendEmailChangeVerification = async(email, name, code, newEmail) =>{
 
@@ -59,6 +69,20 @@ export const sendEmailChangeVerification = async(email, name, code, newEmail) =>
 
   await sendEmail(email, subject, html)
   
+}
+
+export const sendAccountVerifiedEmail = async(name, email) =>{
+
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  
+  const subject = "Account Verified"
+  const html = ACCT_VERIFIED_TEMP.replaceAll("{name}", name).replaceAll("{year}", currentYear)
+  
+
+  await sendEmail(email, subject, html)
+  
+
 }
 
 export const sendWelcomeEmail = async (email, name) =>{
