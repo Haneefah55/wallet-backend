@@ -211,9 +211,7 @@ export const callback = async (req, res) => {
       
     } 
 
-   
-
-      
+  
     user.isVerified = true
     user.lastLogin =  new Date()
   
@@ -226,7 +224,9 @@ export const callback = async (req, res) => {
     //console.log(user)
 
     const userString = encodeURIComponent(JSON.stringify(user))
-    const redirect_uri = `exp://10.33.63.215:8081/--/(auth)/callback?token=${token}` 
+    const redirect_uri = `wallet://(auth)/callback?token=${token}`
+    
+    //`exp://10.33.63.215:8081/--/(auth)/callback?token=${token}` 
     
     res.redirect(redirect_uri)
    
