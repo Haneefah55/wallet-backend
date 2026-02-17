@@ -29,6 +29,10 @@ app.get('/api', (req, res) =>{
   res.status(200).send({ message: "backend api connected" })
 })
 
+app.get('/api/fetch', (req, res) =>{
+  res.status(200).json({ message: "backend api connected" })
+})
+
 
 
 
